@@ -64,7 +64,9 @@
     "ag-grid-svelte": "^0.2.0",
     "electron-log": "^4.3.5",
     "electron-store": "^8.0.0",
-    "electron-updater": "^5.2.1"
+    "electron-updater": "^5.2.1",
+    "postcss": "^8.4.23",
+    "rollup-plugin-postcss": "^4.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.2",

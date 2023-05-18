@@ -1,4 +1,4 @@
-<style>
+<style global>
   .table-wrapper {
     display: flex;
     flex-direction: column;
@@ -14,9 +14,6 @@
   import { CSVResults } from "../types";
   import { Grid } from 'ag-grid-community';
   import type { GridOptions } from 'ag-grid-community/dist/lib/entities/gridOptions';
-  import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
-  import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
-  import '../css/alpinedark.min.css'
   export let data : CSVResults = new CSVResults({income: [], expenses: []});
   let incomeDiv : HTMLDivElement;
   let expensesDiv : HTMLDivElement;
@@ -58,4 +55,5 @@
     <div class="ag-theme-alpine-dark table" bind:this={incomeDiv}></div>
     <div class="ag-theme-alpine-dark table" bind:this={expensesDiv}></div>
   </div>
+  <button on:click={() => console.log(data)}>Log</button>
 </main>

@@ -17,7 +17,6 @@
   import CsvGrabber from "./components/CSVGrabber.svelte";
   import EditableTable from "./components/EditableTable.svelte";
   import { CSVResults } from "./types";
-
   let incomeOutcome : CSVResults = new CSVResults({income: [], expenses: []});
 </script>
 
