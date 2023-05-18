@@ -22,8 +22,14 @@ export class CSVResults{
     this.expenses = data.expenses;
   }
 
-  concat(csvResult: CSVResultType) {
+  clear () {
+    this.income = [];
+    this.expenses = [];
+  }
+
+  concat(csvResult: CSVResultType) : CSVResults {
     this.income = [...this.income, ...csvResult.income];
     this.expenses = [...this.expenses, ...csvResult.expenses];
+    return this;
   }
 }

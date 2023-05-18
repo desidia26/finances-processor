@@ -6,13 +6,6 @@
     margin: 0 auto;
   }
 
-  /* h1 {
-    color: #ff3e00;
-    text-transform: uppercase;
-    font-size: 4em;
-    font-weight: 100;
-  } */
-
   @media (min-width: 640px) {
     main {
       max-width: none;
@@ -21,31 +14,14 @@
 </style>
 
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { processChaseCSV } from './utils/csv-utils';
-  import { CSVResults } from './types';
-  let chaseCSVRegex = /Chase.*\.csv/i;
-  async function handleFileSelection(event: Event) {
-    let csvResults : CSVResults = new CSVResults({income: [], expenses: []});
-    const files = (event.target as HTMLInputElement).files;
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        if (chaseCSVRegex.test(files[i].name)) {
-          let res : CSVResults = await processChaseCSV(files[i])
-          csvResults.concat(res);
-        }
-      }
-      console.log(csvResults);
-    }
-  }
+  import CsvGrabber from "./components/CSVGrabber.svelte";
+  import EditableTable from "./components/EditableTable.svelte";
+  import { CSVResults } from "./types";
 
-  let inputElement: HTMLInputElement;
-  // After the component has been rendered to the DOM.
-  onMount(() => {
-    inputElement.setAttribute('webkitdirectory', 'true');
-  });
+  let incomeOutcome : CSVResults = new CSVResults({income: [], expenses: []});
 </script>
 
 <main>
-  <input type="file" bind:this={inputElement} multiple on:change={handleFileSelection} />
+  <CsvGrabber bind:csvResults={incomeOutcome} />
+  <EditableTable bind:data={incomeOutcome} />
 </main>

@@ -15,18 +15,23 @@ async function processChaseCSV(file: File) : Promise<CSVResults> {
 
 function processCreditLines(lines: string[]) : CSVResults {
   let expenses : Expense[] = [];
+  let income : Income[] = [];
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i].length === 0) {
+    if (lines[i].length === 0 || lines[i].includes("Payment")) {
       continue;
     }
     let line = lines[i].split(",");
-    let amount = Math.abs(Number(line[5]));
+    let amount = Number(line[5]);
     let description = line[2]
     let date = line[0];
     let category = line[3];
-    expenses.push({ description, date, amount, category });
+    if (amount > 0) {
+      income.push({ description, date, amount });
+    } else {
+      expenses.push({ description, date, amount: Math.abs(amount), category });
+    }
   }
-  return new CSVResults({ income: [], expenses });
+  return new CSVResults({ income, expenses });
 }
 
 function processDebitLines(lines: string[]) : CSVResults {

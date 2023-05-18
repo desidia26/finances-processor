@@ -38,6 +38,9 @@ export default {
     format: "iife",
     name: "fluide",
     file: "public/build/bundle.js",
+    globals: {
+      'ag-grid-svelte/dist/AgGridSvelte.svelte': 'AgGridSvelte'
+    }
   },
   plugins: [
     svelte({

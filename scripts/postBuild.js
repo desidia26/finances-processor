@@ -102,8 +102,8 @@ const copyPublicFolderAndMinify = (folderPath, destinationPath) => {
         const unminified = readFileSync(curPath, "utf8");
 
         const unminifiedCorrected = unminified.replace(
-          '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src http://localhost:*; connect-src ws://localhost:*">',
-          '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'">'
+          '<meta http-equiv="Content-Security-Policy"  content="default-src \'self\'; \'unsafe-inline\'; script-src http://localhost:*; connect-src ws://localhost:*">',
+          '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; \'unsafe-inline\'">'
         );
 
         const minifierOptions = {

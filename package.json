@@ -60,6 +60,8 @@
     "preversion": "npm-run-all -s lint format"
   },
   "dependencies": {
+    "ag-grid-community": "^29.3.5",
+    "ag-grid-svelte": "^0.2.0",
     "electron-log": "^4.3.5",
     "electron-store": "^8.0.0",
     "electron-updater": "^5.2.1"
