@@ -2,32 +2,119 @@ import {
   app,
   BrowserWindow,
   Notification,
+  Menu,
+  dialog,
   // nativeImage
+  ipcMain
 } from "electron";
 import { join } from "path";
-import { parse } from "url";
 import { autoUpdater } from "electron-updater";
 
 import logger from "./utils/logger";
 import settings from "./utils/settings";
+import { readdirSync } from "fs";
+import { processChaseCSV } from "./utils/csv-utils";
+import { Finance } from "./utils/types";
 
 const isProd = process.env.NODE_ENV === "production" || app.isPackaged;
 
 logger.info("App starting...");
+console.log(settings)
 settings.set("check", true);
 logger.info("Checking if settings store works correctly.");
 logger.info(settings.get("check") ? "Settings store works correctly." : "Settings store has a problem.");
+console.log(settings)
+ipcMain.handle('electron-store-get', async (event, key) => {
+  console.log(event)
+  return settings.get(key);
+});
 
+ipcMain.handle('electron-store-set', async (event, { key, value }) => {
+  console.log(event)
+  settings.set(key, value);
+});
 let mainWindow: BrowserWindow | null;
 let notification: Notification | null;
 
-const createWindow = () => {
+// Create a function to open the file explorer dialog
+function selectFinancesFolder() {
+  const window = BrowserWindow.getFocusedWindow();
+
+  // Show the file explorer dialog
+  dialog.showOpenDialog(window!, {
+    properties: ['openDirectory']
+  }).then(result => {
+    if (!result.canceled && result.filePaths.length > 0) {
+      // Save the selected folder path to the Electron store
+      let financesFolderPath = result.filePaths[0];
+      settings.set('financesFolderPath', financesFolderPath);
+      mainWindow?.webContents.send('finances-path-changed', financesFolderPath);
+      getCSVResults(settings.get('financesFolderPath')).then(results => {
+        mainWindow?.webContents.send('finances-loaded', results);
+      });
+    }
+  });
+}
+
+async function getCSVResults(dirPath: string): Promise<Finance[]> {
+  try {
+    let results : Finance[] = [];
+    const files = readdirSync(dirPath);
+    const csvFilePromises = files.filter(file => file.toLowerCase().endsWith('.csv'))
+      .map(file => {
+        return processChaseCSV(join(dirPath, file));
+      })
+    const csvResults = await Promise.all(csvFilePromises);
+    for (let csvResult of csvResults) {
+      results = results.concat(csvResult);
+    }
+    return results;
+  } catch (error) {
+    console.error(`Error reading directory: ${error}`);
+    return [];
+  }
+}
+
+// Create the menu template
+const menuTemplate: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'Select finances folder',
+        click: selectFinancesFolder
+      },
+      {
+        label: 'View Saved Finances',
+        click: () => {
+          mainWindow?.webContents.send('view-saved-finances');
+        }
+      },
+      {
+        label: 'Quit',
+        accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
+        click: () => {
+          app.quit();
+        }
+      }
+    ]
+  }
+];
+
+// Create the menu from the template
+const menu = Menu.buildFromTemplate(menuTemplate);
+
+// Set the menu to be the application menu
+Menu.setApplicationMenu(menu);
+
+const createWindow = async () => {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 680,
     webPreferences: {
       devTools: isProd ? false : true,
       contextIsolation: true,
+      preload: join(__dirname, 'preload.js'),
     },
   });
 
@@ -45,11 +132,15 @@ const createWindow = () => {
   });
 
   if (!isProd) mainWindow.webContents.openDevTools();
-
+  let results = await getCSVResults(settings.get('financesFolderPath'));
+  console.log(results);
+  settings.set('finances', results);
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
 };
+
+
 
 app.on("ready", createWindow);
 
@@ -82,15 +173,9 @@ app.on("web-contents-created", (e, contents) => {
   });
 
   contents.on("will-navigate", (event, navigationUrl) => {
-    const parsedURL = parse(navigationUrl);
     // In dev mode allow Hot Module Replacement
-    if (parsedURL.host !== "localhost:5000" && !isProd) {
       logger.warn("Stopped attempt to open: " + navigationUrl);
       event.preventDefault();
-    } else if (isProd) {
-      logger.warn("Stopped attempt to open: " + navigationUrl);
-      event.preventDefault();
-    }
   });
 });
 

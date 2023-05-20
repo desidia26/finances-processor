@@ -1,8 +1,8 @@
-import { type Income, type Expense, CSVResults } from "../types";
+import { promises as fs } from 'fs';
+import type { Finance } from './types';
 
-
-async function processChaseCSV(file: File) : Promise<CSVResults> {
-  let text = await file.text();
+async function processChaseCSV(filePath: string) : Promise<Finance[]> {
+  let text = await fs.readFile(filePath, 'utf-8');
   let lines = text.split("\n");
   let headers = lines[0].split(",");
   if (headers.includes("Balance")) {
@@ -13,9 +13,8 @@ async function processChaseCSV(file: File) : Promise<CSVResults> {
   }
 }
 
-function processCreditLines(lines: string[]) : CSVResults {
-  let expenses : Expense[] = [];
-  let income : Income[] = [];
+function processCreditLines(lines: string[]) : Finance[] {
+  let finances : Finance[] = [];
   for (let i = 1; i < lines.length; i++) {
     if (lines[i].length === 0 || lines[i].includes("Payment")) {
       continue;
@@ -26,17 +25,16 @@ function processCreditLines(lines: string[]) : CSVResults {
     let date = line[0];
     let category = line[3];
     if (amount > 0) {
-      income.push({ description, date, amount });
+      finances.push({ description, date, amount, type: "income" });
     } else {
-      expenses.push({ description, date, amount: Math.abs(amount), category });
+      finances.push({ description, date, amount: Math.abs(amount), type: "expense", category });
     }
   }
-  return new CSVResults({ income, expenses });
+  return finances;
 }
 
-function processDebitLines(lines: string[]) : CSVResults {
-  let income : Income[] = []
-  let expenses : Expense[] = [];
+function processDebitLines(lines: string[]) : Finance[] {
+  let finances : Finance[] = [];
   for (let i = 1; i < lines.length; i++) {
     if (lines[i].length === 0) {
       continue;
@@ -47,12 +45,12 @@ function processDebitLines(lines: string[]) : CSVResults {
     let date = line[1];
     let category = line[4];
     if (amount > 0) {
-      income.push({ description, date, amount });
+      finances.push({ description, date, amount, type: "income" });
     } else if (!description.includes('Payment to Chase card ending')) {
-      expenses.push({ description, date, amount: Math.abs(amount), category });
+      finances.push({ description, date, amount: Math.abs(amount), type: "expense", category });
     }
   }
-  return new CSVResults({ income, expenses });
+  return finances;
 }
 
 export { processChaseCSV };

@@ -14,13 +14,38 @@
 </style>
 
 <script lang="ts">
-  import CsvGrabber from "./components/CSVGrabber.svelte";
   import EditableTable from "./components/EditableTable.svelte";
-  import { CSVResults } from "./types";
-  let incomeOutcome : CSVResults = new CSVResults({income: [], expenses: []});
+  import { onMount } from 'svelte';
+    import type { Finance } from "./types";
+  let financesDir: string = "";
+  let finances: Finance[] = [];
+  onMount(async () => {
+    // @ts-ignore
+    window.eventListener.on('finances-loaded', (res: CSVResults) => {
+      finances = finances.concat(res);
+    });
+    // @ts-ignore
+    window.eventListener.on('finances-path-changed', (path) => {
+      finances = [];
+      financesDir = path;
+    });
+    // @ts-ignore
+    window.electronStore.get("financesFolderPath").then(res => {
+      financesDir = res;
+    });
+    // @ts-ignore
+    window.electronStore.get("finances").then(res => {
+      finances = res;
+    });
+  });
 </script>
 
 <main>
-  <CsvGrabber bind:csvResults={incomeOutcome} />
-  <EditableTable bind:data={incomeOutcome} />
+  {#if financesDir === ""}
+    <h1>Choose a directory to pull financial records from</h1>
+  {:else if finances.length > 0}
+    <EditableTable bind:rowData={finances} />
+  {:else}
+    <h1>No data in {financesDir}</h1>
+  {/if}
 </main>

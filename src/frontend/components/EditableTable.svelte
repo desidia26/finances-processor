@@ -5,22 +5,24 @@
   }
   .table {
     width: 100%;
-    height: 500px;
+    height: 95vh;
   }
 </style>
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import { CSVResults } from "../types";
   import { Grid } from 'ag-grid-community';
   import type { GridOptions } from 'ag-grid-community/dist/lib/entities/gridOptions';
-  export let data : CSVResults = new CSVResults({income: [], expenses: []});
-  let incomeDiv : HTMLDivElement;
-  let expensesDiv : HTMLDivElement;
-  let incomeColumnDefs = [
+  import type { Finance } from "../types";
+  export let rowData : Finance[] = [];
+  let gridDiv : HTMLDivElement;
+  let columnDefs = [
     { field: 'date' },
     { field: 'description' },
-    { field: 'amount' }
+    { field: 'amount' },
+    { field: 'category' },
+    { field: 'type' }
+    
   ]
   let defaultColDef = {
     sortable: true,
@@ -28,32 +30,25 @@
     resizable: true,
     flex: 1,
     minWidth: 100,
-    editable: true
+    editable: true,
+    type: 'rightAligned'
   }
-  let incomeGridOptions : GridOptions = {
-    columnDefs: incomeColumnDefs,
-    rowData: data.income,
-    defaultColDef
-  }
-  let expensesGridOptions : GridOptions = {
-    columnDefs: [...incomeColumnDefs, { field: 'category' }],
-    rowData: data.income,
+  let gridOptions : GridOptions = {
+    columnDefs: columnDefs,
+    rowData,
     defaultColDef
   }
   $: {
-    incomeGridOptions.api?.setRowData(data.income);
-    expensesGridOptions.api?.setRowData(data.expenses);
+    gridOptions.api?.setRowData(rowData);
   }
   onMount(() => {
-    new Grid(incomeDiv, incomeGridOptions);
-    new Grid(expensesDiv, expensesGridOptions);
+    new Grid(gridDiv, gridOptions);
   });
 </script>
 
 <main>
   <div class="table-wrapper">
-    <div class="ag-theme-alpine-dark table" bind:this={incomeDiv}></div>
-    <div class="ag-theme-alpine-dark table" bind:this={expensesDiv}></div>
+    <div class="ag-theme-alpine-dark table" bind:this={gridDiv}></div>
   </div>
-  <button on:click={() => console.log(data)}>Log</button>
+  <button on:click={() => console.log(rowData)}>Log</button>
 </main>
